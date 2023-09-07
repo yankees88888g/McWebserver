@@ -49,7 +49,7 @@ public class HttpServer implements Runnable {
     // Client Connection via Socket Class
     private final Socket connect;
     private final MimeTypeIdentifier mimetypeidentifier = new MimeTypeIdentifier();
-    private Boolean isApiRequest = false;
+    private Boolean isApiv1Request = false;
 
     static {
         try {
@@ -115,7 +115,7 @@ public class HttpServer implements Runnable {
 
                 // we support only GET and HEAD methods, we check
                 if (!method.equals("GET") && !method.equals("HEAD")) {
-                    isApiRequest = false;
+                    isApiv1Request = false;
                     VerboseLogger.info("501 Not Implemented : " + method + " method.");
 
                     // we return the not supported file to the client
@@ -136,59 +136,61 @@ public class HttpServer implements Runnable {
                     dataOut.write(fileData, 0, fileData.length);
                     dataOut.flush();
                 } else if (isApiRequest(fileRequested)) {
-                    isApiRequest = true;
-
-                    // Set appropriate response headers
-                    dataOut.write("HTTP/1.1 200 OK\r\n".getBytes(StandardCharsets.UTF_8));
-                    dataOut.write("Date: %s\r\n".formatted(Instant.now()).getBytes(StandardCharsets.UTF_8));
-                    if (fileRequested.equals("/api/v1/favicon")) {
-                        int contentLength;
-                        byte[] serverIcon;
-                        try {
+                    isApiv1Request = true;
+                    // Check if server API is enabled
+                    if (ModConfigs.SERVER_API_ENABLED) {
+                        // Set appropriate response headers
+                        dataOut.write("HTTP/1.1 200 OK\r\n".getBytes(StandardCharsets.UTF_8));
+                        dataOut.write("Date: %s\r\n".formatted(Instant.now()).getBytes(StandardCharsets.UTF_8));
+                        if (fileRequested.equals("/api/v1/servericon")) {
                             dataOut.write("Content-Type: image/png\r\n".getBytes(StandardCharsets.UTF_8));
                             // Get server icon from ApiHandler
-                            serverIcon = ApiRequestsUtil.getServerIcon();
-                            contentLength = serverIcon.length;
-                        } catch (Exception e) {
-                            serverIcon = ApiRequests.internalServerError().getBytes(StandardCharsets.UTF_8);
-                            VerboseLogger.error("Error getting server icon from ApiHandler: " + e.getMessage());
+                            byte[] serverIcon = ApiRequestsUtil.getServerIcon();
+                            int contentLength = serverIcon.length;
+
+                            dataOut.write(("Content-Length: " + contentLength + "\r\n").getBytes(StandardCharsets.UTF_8));
+                            dataOut.write("\r\n".getBytes(StandardCharsets.UTF_8)); // Blank line before content
+
+                            // Send server icon
+                            dataOut.write(serverIcon, 0, contentLength);
+                            dataOut.flush();
+                        } else {
                             dataOut.write("Content-Type: application/json\r\n".getBytes(StandardCharsets.UTF_8));
-                            contentLength = serverIcon.length;
+                            String jsonString = "";
+                            try {
+                                // Get JSON data from ApiHandler
+                                jsonString = ApiHandler.handle(fileRequested);
+                            } catch (Exception e) {
+                                VerboseLogger.error("Error getting JSON data from ApiHandler: " + e.getMessage());
+                                jsonString = ApiRequests.internalServerError();
+                            }
+
+
+                            byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+                            int contentLength = jsonBytes.length;
+
+                            dataOut.write(("Content-Length: " + contentLength + "\r\n").getBytes(StandardCharsets.UTF_8));
+                            dataOut.write("\r\n".getBytes(StandardCharsets.UTF_8)); // Blank line before content
+
+                            // Send JSON data
+                            dataOut.write(jsonBytes, 0, contentLength);
+                            dataOut.flush();
                         }
-
-
-                        dataOut.write(("Content-Length: " + contentLength + "\r\n").getBytes(StandardCharsets.UTF_8));
-                        dataOut.write("\r\n".getBytes(StandardCharsets.UTF_8)); // Blank line before content
-
-                        // Send server icon
-                        dataOut.write(serverIcon, 0, contentLength);
-                        dataOut.flush();
                     } else {
-                        dataOut.write("Content-Type: application/json\r\n".getBytes(StandardCharsets.UTF_8));
-                        String jsonString = "";
-                        try {
-                            // Get JSON data from ApiHandler
-                            jsonString = ApiHandler.handle(fileRequested);
-                        } catch (Exception e) {
-                            VerboseLogger.error("Error getting JSON data from ApiHandler: " + e.getMessage());
-                            jsonString = ApiRequests.internalServerError();
-                        }
-
-
+                        // Server API is disabled
+                        String jsonString = ApiRequests.forbiddenRequest();
                         byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
                         int contentLength = jsonBytes.length;
-
+                        dataOut.write("HTTP/1.1 403 Forbidden\r\n".getBytes(StandardCharsets.UTF_8));
+                        dataOut.write("Date: %s\r\n".formatted(Instant.now()).getBytes(StandardCharsets.UTF_8));
+                        dataOut.write("Content-Type: application/json\r\n".getBytes(StandardCharsets.UTF_8));
                         dataOut.write(("Content-Length: " + contentLength + "\r\n").getBytes(StandardCharsets.UTF_8));
                         dataOut.write("\r\n".getBytes(StandardCharsets.UTF_8)); // Blank line before content
-
-                        // Send JSON data
                         dataOut.write(jsonBytes, 0, contentLength);
                         dataOut.flush();
                     }
-
-
                 } else {
-                    isApiRequest = false;
+                    isApiv1Request = false;
                     // GET or HEAD method
                     if (fileRequested.endsWith("/")) {
                         fileRequested += DEFAULT_FILE;

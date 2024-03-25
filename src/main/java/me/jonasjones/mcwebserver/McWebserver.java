@@ -5,6 +5,7 @@ import me.jonasjones.mcwebserver.web.api.v1.ApiHandler;
 import me.jonasjones.mcwebserver.web.ServerHandler;
 import me.jonasjones.mcwebserver.web.api.v2.tokenmgr.Token;
 import me.jonasjones.mcwebserver.web.api.v2.tokenmgr.TokenManager;
+import me.jonasjones.mcwebserver.web.defaults.CreateDefaults;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
@@ -63,6 +64,7 @@ public class McWebserver implements ModInitializer {
 			LOGGER.info("Server API disabled in the config file.");
 		}
 
+		CreateDefaults.createDefaults();
 		ServerHandler.start();
 	}
 }

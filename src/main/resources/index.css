@@ -1,0 +1,45 @@
+@font-face {
+    font-family: 'Minecraft';
+    src: url('Minecraft.otf') format('opentype');
+}
+
+body {
+    font-family: Arial;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+#servername {
+    font-size: 96px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+#motd {
+    font-size: 48px;
+    font-weight: italics;
+    margin-bottom: 10px;
+}
+
+.data-item {
+    margin-bottom: 20px;
+}
+
+.data-item label {
+    font-weight: bold;
+}
+
+.data-item p {
+    margin: 5px 0;
+}
+
+#favicon {
+    max-width: 100px;
+    display: block;
+    margin: 20px auto;
+}

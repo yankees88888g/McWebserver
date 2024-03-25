@@ -32,4 +32,7 @@ public class ApiRequests {
     public static String forbiddenRequest() {
         return "{\"error\":{\"status\":403,\"message\":\"Forbidden\"}}";
     }
+    public static String getMods(){
+        return gson.toJson(ApiRequestsUtil.getMods());
+    }
 }

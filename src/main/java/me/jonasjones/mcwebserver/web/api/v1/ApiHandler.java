@@ -54,6 +54,9 @@ public class ApiHandler {
             case "timereference" -> {
                 return ApiRequests.singleValueRequest(String.valueOf(ApiRequestsUtil.getTIME_REFERENCE()));
             }
+            case "mods" -> {
+                return ApiRequests.getMods();
+            }
             case "getall" -> {
                 return ApiRequests.serverGetAllRequest();
             }

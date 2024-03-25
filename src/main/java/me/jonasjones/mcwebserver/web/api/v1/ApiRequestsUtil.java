@@ -21,6 +21,7 @@ import net.minecraft.world.GameMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static me.jonasjones.mcwebserver.config.ModConfigs.WEB_PORT;
 
@@ -118,4 +119,12 @@ public class ApiRequestsUtil {
         return ApiRequestsUtil.getSERVER_METADATA().favicon().get().iconBytes();
     }
 
+    public static List<String> getMods(){
+        FabricLoader fabricLoader = FabricLoader.getInstance();
+        List<String> loadedMods = fabricLoader.getAllMods().stream().map(mod -> mod.getMetadata().getId().toString()).collect(Collectors.toList());
+        for (String mod : loadedMods) {
+            System.out.println(mod);
+        }
+        return loadedMods;
+    }
 }

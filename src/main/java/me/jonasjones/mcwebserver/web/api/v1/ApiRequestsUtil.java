@@ -11,6 +11,8 @@ import me.jonasjones.mcwebserver.web.api.v1.json.ApiServerMetadata;
 import me.jonasjones.mcwebserver.web.api.v1.json.ApiServerMetadataPlayer;
 import me.jonasjones.mcwebserver.web.api.v1.json.ApiServerMetadataPlayers;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.entity.boss.CommandBossBar;
 import net.minecraft.resource.ResourcePackProfile;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static me.jonasjones.mcwebserver.config.ModConfigs.WEB_PORT;
 
@@ -119,11 +122,16 @@ public class ApiRequestsUtil {
         return ApiRequestsUtil.getSERVER_METADATA().favicon().get().iconBytes();
     }
 
-    public static List<String> getMods(){
+    public static List<ModMetadata> getMods(){
         FabricLoader fabricLoader = FabricLoader.getInstance();
-        List<String> loadedMods = fabricLoader.getAllMods().stream().map(mod -> mod.getMetadata().getId().toString()).collect(Collectors.toList());
-        for (String mod : loadedMods) {
-            System.out.println(mod);
+        Stream<ModContainer> modContainerStream = fabricLoader.getAllMods().stream();
+        List<ModMetadata> loadedMods = modContainerStream
+                .map(ModContainer::getMetadata)
+                .collect(Collectors.toList());
+
+
+        for (ModMetadata mod : loadedMods) {
+            System.out.println(mod.getName());
         }
         return loadedMods;
     }
